@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sealsnap"
+version = "0.1.0"
+description = "Passive, integrity-sealed snapshots of public web pages (Windows, Microsoft Edge)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Boris Avetisyan" }]
+keywords = ["web archiving", "evidence", "snapshot", "integrity", "sha256", "playwright", "edge"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Win32 (MS Windows)",
+  "Intended Audience :: Legal Industry",
+  "Intended Audience :: Science/Research",
+  "Operating System :: Microsoft :: Windows :: Windows 10",
+  "Operating System :: Microsoft :: Windows :: Windows 11",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Security",
+  "Topic :: System :: Archiving",
+]
+dependencies = [
+  "playwright>=1.56,<2",
+  "certifi>=2026.1.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/ABKDR/sealsnap"
+Changelog = "https://github.com/ABKDR/sealsnap/blob/main/CHANGELOG.md"
+Security = "https://github.com/ABKDR/sealsnap/blob/main/SECURITY.md"
+
+[project.scripts]
+sealsnap = "sealsnap.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["sealsnap*"]
