@@ -51,7 +51,7 @@ def main():
             app.url.set('https://example.com/')
             app.capture_button.invoke()
             text = await_idle()
-            assert text.startswith('Пакет сохранён и проверен.'), text
+            assert text.startswith(app.t['saved']), text
             folder = Path(app.last_folder)
             receipt = verify(folder)['manifest_sha256']
             record('real-capture', text)
@@ -60,7 +60,7 @@ def main():
                 app.anchor.set(receipt)
                 app.verify_button.invoke()
                 text = await_idle()
-                assert 'Отпечаток сверен с указанным вами значением.' in text, text
+                assert app.t['anchored'] in text, text
                 record('verify-known-receipt', text)
 
                 (folder/'source.html.txt').write_bytes(b'deliberate test modification')
@@ -80,7 +80,7 @@ def main():
                     yield child
                     yield from descendants(child)
             cancel_button = next(w for w in descendants(root)
-                if w.winfo_class() == 'TButton' and w.cget('text') == 'Отменить')
+                if w.winfo_class() == 'TButton' and w.cget('text') == app.t['cancel'])
             app.url.set('https://example.com/')
             app.capture_button.invoke()
             cancel_button.invoke()

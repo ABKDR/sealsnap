@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 import socket
 import struct
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -113,6 +115,14 @@ class PackageTests(unittest.TestCase):
     def test_duplicate_json_key(self):
         p=self.folder/'manifest.json';p.write_bytes(b'{"format":"x","format":"y","files":{}}')
         with self.assertRaisesRegex(SnapshotError,'DUPLICATE'):verify(self.folder)
+
+    def test_deep_json_nesting(self):
+        p=self.folder/'manifest.json';p.write_bytes(b'['*8000+b']'*8000)
+        with self.assertRaisesRegex(SnapshotError,'INVALID_JSON'):verify(self.folder)
+        r=subprocess.run([sys.executable,'-B','-m','sealsnap','verify',str(self.folder)],
+                         cwd=Path(__file__).resolve().parent.parent,capture_output=True,timeout=60)
+        self.assertEqual(r.returncode,2,r.stderr[-300:])
+        self.assertIn(b'INVALID_JSON',r.stdout)
 
     def test_hardlink(self):
         p=self.folder/'source.html.txt'

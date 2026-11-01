@@ -11,8 +11,22 @@ class Handler(BaseHTTPRequestHandler):
     hits = []
     def log_message(self, *args):
         pass
+    RAW = {'/s101': b'101 Switching Protocols', '/s103': b'103 Early Hints', '/s199': b'199 X',
+           '/s600': b'600 X', '/s6_00': b'6_00 X', '/s0600': b'0600 X', '/s404': b'404 Not Found',
+           '/s150': b'150 X', '/s999': b'999 X'}
+    def raw(self, data):
+        self.wfile.write(data)
+        self.close_connection = True
     def do_GET(self):
         self.hits.append(self.path)
+        if self.path in self.RAW:
+            return self.raw(b'HTTP/1.1 ' + self.RAW[self.path] + b'\r\nContent-Length: 0\r\nConnection: close\r\n\r\n')
+        if self.path == '/continue':
+            return self.raw(b'HTTP/1.1 100 Continue\r\n\r\nHTTP/1.1 200 OK\r\nContent-Type: text/html\r\n'
+                            b'Content-Length: 16\r\nConnection: close\r\n\r\n<h1>fixture</h1>')
+        if self.path == '/bad-location':
+            return self.raw(b'HTTP/1.1 302 Found\r\nLocation: http://[::1\r\nContent-Length: 0\r\n'
+                            b'Connection: close\r\n\r\n')
         if self.path in ('/redirect-private', '/redirect-ok', '/loop'):
             self.send_response(302)
             self.send_header('Location', {'/redirect-private':'http://127.0.0.1/private',
@@ -97,6 +111,18 @@ class TransportTests(unittest.TestCase):
             self.assertEqual(Fetcher().fetch('http://fixture.example'+path).body,b'<h1>fixture</h1>')
         with self.assertRaisesRegex(SnapshotError,'BODY_INCOMPLETE'):
             Fetcher().fetch('http://fixture.example/truncated')
+
+    def test_status_outside_final_range(self):
+        for path in ('/s101','/s103','/s150','/s199','/s600','/s6_00','/s0600','/s999'):
+            with self.subTest(path=path), self.assertRaisesRegex(SnapshotError,'HTTP_STATUS'):
+                Fetcher().fetch('http://fixture.example'+path)
+        self.assertEqual(Fetcher().fetch('http://fixture.example/s404').status,404)
+        r=Fetcher().fetch('http://fixture.example/continue')
+        self.assertEqual((r.status,r.body),(200,b'<h1>fixture</h1>'))
+
+    def test_unparsable_redirect_location(self):
+        with self.assertRaisesRegex(SnapshotError,'URL_NOT_PUBLIC_HTTP'):
+            Fetcher().fetch('http://fixture.example/bad-location')
 
     def test_ambiguous_or_unsupported_framing(self):
         for path in ('/ambiguous','/duplicate-cl','/unsupported-te'):

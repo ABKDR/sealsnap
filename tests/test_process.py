@@ -8,7 +8,7 @@ import threading
 import time
 import unittest
 from unittest.mock import patch
-from sealsnap.process import Job, run_capture
+from sealsnap.process import Job, parse_worker_output, run_capture
 from sealsnap.network import SnapshotError
 
 
@@ -61,6 +61,12 @@ class ProcessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='_proba_sealsnap_attach_') as tmp:
             with patch.object(Job,'attach',delayed), self.assertRaisesRegex(SnapshotError,'NON_PUBLIC_ADDRESS'):
                 run_capture('http://127.0.0.1/',tmp)
+
+    def test_worker_output_parsing(self):
+        for out in (b'[' * 16000, b'{"a":' * 5000, b'[]', b'"x"', b'', b'{"ok": tru'):
+            with self.subTest(out=out[:12]), self.assertRaisesRegex(SnapshotError, 'WORKER_FAILED'):
+                parse_worker_output(out)
+        self.assertEqual(parse_worker_output(b'{"ok": true}'), {'ok': True})
 
     def test_cancel_before_network(self):
         cancel=threading.Event();cancel.set()
