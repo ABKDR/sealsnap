@@ -68,6 +68,16 @@ class Job:
             self.handle = None
 
 
+def parse_worker_output(out):
+    try:
+        result = json.loads(out)
+    except (ValueError, UnicodeError, RecursionError):
+        raise SnapshotError('WORKER_FAILED') from None
+    if type(result) is not dict:
+        raise SnapshotError('WORKER_FAILED')
+    return result
+
+
 def run_capture(url, output, cancel=None):
     root = Path(__file__).resolve().parent.parent
     job = Job()
@@ -100,10 +110,7 @@ def run_capture(url, output, cancel=None):
                     sent = True
             if len(out) > 32768:
                 raise SnapshotError('WORKER_OUTPUT_LIMIT')
-            try:
-                result = json.loads(out)
-            except (ValueError, UnicodeError):
-                raise SnapshotError('WORKER_FAILED') from None
+            result = parse_worker_output(out)
             if proc.returncode != 0 or result.get('ok') is not True:
                 raise SnapshotError(str(result.get('error', 'WORKER_FAILED'))[:200])
             return result

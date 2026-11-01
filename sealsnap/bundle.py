@@ -76,7 +76,8 @@ def verify(directory, expected=None):
     try:
         m = json.loads(raw, object_pairs_hook=_pairs,
                        parse_constant=lambda _: (_ for _ in ()).throw(SnapshotError('INVALID_JSON')))
-    except (ValueError, UnicodeError):
+    except (ValueError, UnicodeError, RecursionError):
+        # Deep nesting fits into the size limit and exhausts the parser's recursion.
         raise SnapshotError('INVALID_JSON') from None
     if (type(m) is not dict or set(m) != {'format', 'files'} or m['format'] != 'sealsnap-1'
             or type(m['files']) is not dict or set(m['files']) != set(FILES)):
@@ -98,7 +99,7 @@ def verify(directory, expected=None):
                 raise SnapshotError('PNG_DIMENSIONS')
     return dict(ok=True, path=str(folder), manifest_sha256=fingerprint,
                 external_fingerprint_checked=expected is not None,
-                assurance='Совпадение файлов с манифестом; не удостоверяет автора или время.')
+                assurance='Files match the manifest; this does not certify the author or the time.')
 
 
 def save(directory, files):

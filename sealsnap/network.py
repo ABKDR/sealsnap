@@ -8,6 +8,7 @@ import ssl
 import time
 import certifi
 from urllib.parse import urljoin, urlsplit, urlunsplit, quote
+from . import __version__
 
 
 class SnapshotError(Exception):
@@ -123,7 +124,7 @@ class Fetcher:
             conn = PinnedConnection(t, ip, min(8, remaining))
             try:
                 conn.request('GET', t.path, headers={
-                    'Host': t.host, 'User-Agent': 'SealSnap/0.1 (passive capture)',
+                    'Host': t.host, 'User-Agent': f'SealSnap/{__version__} (passive capture)',
                     'Accept': '*/*', 'Accept-Encoding': 'identity', 'Connection': 'close'})
                 resp = conn.getresponse()
                 headers = resp.getheaders()
@@ -134,10 +135,15 @@ class Fetcher:
                     locations = [v for k, v in headers if k.lower() == 'location']
                     if step == 5 or len(locations) != 1:
                         raise SnapshotError('REDIRECT_LIMIT_OR_LOCATION')
-                    next_url = target(urljoin(t.url, locations[0])).url
+                    try:
+                        joined = urljoin(t.url, locations[0])
+                    except ValueError:
+                        raise SnapshotError('URL_NOT_PUBLIC_HTTP') from None
+                    next_url = target(joined).url
                     redirects.append(dict(source=t.url, destination=next_url, status=resp.status))
                     url = next_url
                     continue
+                # http.client returns 101-199 and 600-999 as final statuses; this guard is live.
                 if not 200 <= resp.status <= 599:
                     raise SnapshotError('HTTP_STATUS')
                 if 'attachment' in (resp.getheader('Content-Disposition') or '').lower():

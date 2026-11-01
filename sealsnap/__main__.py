@@ -5,7 +5,7 @@ from .network import SnapshotError
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Пассивный веб-снимок и проверка пакета. Windows + Edge.')
+    parser = argparse.ArgumentParser(description='Passive web page snapshot and package verification. Windows and Edge.')
     sub = parser.add_subparsers(dest='command', required=True)
     cap = sub.add_parser('capture')
     cap.add_argument('url')
