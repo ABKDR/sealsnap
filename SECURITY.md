@@ -7,9 +7,10 @@ explains how to report a security problem and what happens after you do.
 
 | Version | Supported |
 |---|---|
-| 0.1.x | Yes |
+| 0.2.x | Yes |
+| 0.1.x | No |
 
-Security fixes are made for the latest 0.1.x release.
+Security fixes are made for the latest 0.2.x release.
 
 ## Reporting a vulnerability
 

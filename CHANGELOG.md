@@ -4,6 +4,35 @@ All notable changes to SealSnap are recorded in this file. The format is based o
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.0 (2026-11-01)
+
+This release fixes three robustness defects and adds an English window. It contains no security fixes:
+none of them crossed a boundary described in SECURITY.md.
+
+### Added
+
+- The window is available in English and Russian. It follows the Windows display language, and
+  `SEALSNAP_LANG=en` or `SEALSNAP_LANG=ru` chooses one explicitly.
+- Seeded fuzz tests built on the standard library for HTTP response parsing, URL handling and
+  package verification. `SEALSNAP_FUZZ_ITERATIONS` and `SEALSNAP_FUZZ_SEED` set the length and the
+  seed of a run.
+- Tests that pin the refusal of interim and out-of-range HTTP statuses, 101 to 199 and 600 to 999.
+
+### Changed
+
+- The `assurance` note in the `verify` output and the command line help are in English.
+- The User-Agent header carries the package version.
+
+### Fixed
+
+- `verify` stopped with a traceback and exit code 1 on a deeply nested `manifest.json`. It now
+  refuses such a package as `INVALID_JSON` with exit code 2. The package was never accepted.
+- A redirect whose `Location` header cannot be parsed, such as `http://[::1`, raised an unexpected
+  error instead of a refusal. It is now refused as `URL_NOT_PUBLIC_HTTP`. For a resource requested
+  by the page, the request is now blocked and listed in the metadata like other refusals.
+- Output from the capture worker that is nested too deeply or is not a JSON object is refused as
+  `WORKER_FAILED` instead of raising an unexpected error.
+
 ## 0.1.0 (2026-11-01)
 
 First public release. SealSnap was developed privately in October 2026; before this release it went

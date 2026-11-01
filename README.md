@@ -95,8 +95,9 @@ Paste the address, choose a folder and press the save button. When the capture f
 shows the package path and the manifest fingerprint, and the open folder button takes you there. The
 verify button checks any package folder. If you kept a fingerprint from an earlier capture, paste it
 into the field above that button and the package is checked against it as well. The cancel button,
-or closing the window, stops a capture in progress. The window is in Russian for now; an English
-interface is the first item on the roadmap.
+or closing the window, stops a capture in progress. The window follows the Windows display language:
+Russian on a Russian system and English everywhere else. Set `SEALSNAP_LANG` to `en` or `ru` to
+choose one explicitly.
 
 ### Command line
 
@@ -109,8 +110,7 @@ python -m sealsnap verify captures/snapshot-<id> --expected-sha256 <fingerprint>
 Results are printed as JSON. Success exits with code 0 and `ok: true`. An expected refusal, such as
 an unsafe address, a limit reached or a file that does not match, exits with code 2 and prints
 `ok: false` with a short error code, for example `NON_PUBLIC_ADDRESS` or
-`FILE_DIGEST_MISMATCH:source.html.txt`. The `assurance` note in the output is in Russian, like the
-window. Without `--output`, packages go to a `captures` folder next to the `sealsnap` module
+`FILE_DIGEST_MISMATCH:source.html.txt`. Without `--output`, packages go to a `captures` folder next to the `sealsnap` module
 directory; when you run from a source checkout, that is the project folder.
 
 ## What verification proves and does not prove
@@ -150,7 +150,6 @@ model and the reporting procedure are in [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
-- English interface.
 - Signed manifests and trusted timestamps.
 - Batch capture from a list of URLs.
 - PDF report for a package.
@@ -165,7 +164,9 @@ python -B -m unittest discover -s tests -v
 The unit tests need no internet access. Network behaviour is tested against a local fixture server,
 and the Windows Job tests run only on Windows. CI runs them on Windows with Python 3.12 in the
 `tests` workflow. `tests/gui_smoke.py` drives the real window, goes out to example.com and is run
-separately by hand.
+separately by hand. `tests/test_fuzz.py` feeds mutated HTTP responses, URLs and packages to the
+parsers, using only the standard library. `SEALSNAP_FUZZ_ITERATIONS` makes a run longer, and
+`SEALSNAP_FUZZ_SEED` makes it different.
 
 SealSnap was developed privately in October 2026; before this first public release it went through
 an independent defect review, and the defects found were fixed.
